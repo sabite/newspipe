@@ -43,6 +43,7 @@ class Article(db.Model):
     date = db.Column(db.DateTime(), default=datetime.now)
     updated_date = db.Column(db.DateTime(), default=datetime.now)
     retrieved_date = db.Column(db.DateTime(), default=datetime.now)
+    notes = db.Column(db.String())
 
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     feed_id = db.Column(db.Integer(), db.ForeignKey('feed.id'))
@@ -81,5 +82,6 @@ class Article(db.Model):
                 "date": self.date,
                 "updated_date": self.updated_date,
                 "retrieved_date": self.retrieved_date,
+                "notes": self.notes,
                 "feed_id": self.feed_id,
                 "category_id": self.category_id}

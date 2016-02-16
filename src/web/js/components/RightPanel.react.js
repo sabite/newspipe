@@ -114,10 +114,21 @@ var PanelMixin = {
                     </button>
                 </dd>);
     },
+    getNotes: function () {
+        return (<div className="panel-footer">
+                    <textarea rows="4">
+                        {this.props.obj.notes}
+                    </textarea>
+                    <button className="btn btn-default" onClick="">
+                        Submit
+                    </button>
+                </div>);
+    },
     render: function() {
         return (<div className="panel panel-default">
                     {this.getHeader()}
                     {this.getBody()}
+                    {this.getNotes()}
                 </div>
         );
     },
