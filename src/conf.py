@@ -123,3 +123,26 @@ POSTMARK_API_KEY = ''
 CSRF_ENABLED = True
 # slow database query threshold (in seconds)
 DATABASE_QUERY_TIMEOUT = 0.5
+
+
+OPENIDC_CLIENT_ID = config.get('openidc', 'client_id')
+OPENIDC_CLIENT_SECRET = config.get('openidc', 'client_secret')
+OPENIDC_CONFIG = config.get('openidc', 'config')
+OPENIDC_AUTHORIZATION_ENDPOINT = None
+OPENIDC_TOKEN_ENDPOINT = None
+OPENIDC_USERINFO_ENDPOINT = None
+try:
+    import aiohttp
+    import asyncio
+    async def do():
+        req = await aiohttp.request('GET', OPENIDC_CONFIG)
+        config = await req.json()
+        global OPENIDC_AUTHORIZATION_ENDPOINT
+        global OPENIDC_TOKEN_ENDPOINT
+        global OPENIDC_USERINFO_ENDPOINT
+        OPENIDC_AUTHORIZATION_ENDPOINT = config['authorization_endpoint']
+        OPENIDC_TOKEN_ENDPOINT = config['token_endpoint']
+        OPENIDC_USERINFO_ENDPOINT = config['userinfo_endpoint']
+    asyncio.get_event_loop().run_until_complete(do())
+except:
+    pass

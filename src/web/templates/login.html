@@ -3,28 +3,8 @@
 <div class="container">
     <div class="well">
         <h2>{{ _('Log In') }}</h2>
-        <form action="{{ url_for('login') }}" method=post>
-            {{ form.hidden_tag() }}
-
-            <div class="form-group">
-            {{ form.email_or_nickmane(class_="form-control", placeholder=_('Your email or nickname')) }}
-            </div>
-            {% for message in form.email_or_nickmane.errors %}
-                <div class="alert alert-warning" role="alert">{{ message }}</div>
-            {% endfor %}
-
-            <div class="form-group">
-            {{ form.password(class_="form-control", placeholder=_('Your Password')) }}
-            </div>
-            {% for message in form.password.errors %}
-                <div class="alert alert-warning" role="alert">{{ message }}</div>
-            {% endfor %}
-
-            {{ form.submit(class_="btn btn-default") }}
+        <a href="{{ authorization }}" class="btn btn-default">{{ _('Sign in') }}</a>
         </form>
     </div>
-    <a href="/signup" class="btn btn-default">{{ _('Sign up') }}</a>
-    &nbsp;
-    <a href="{{ url_for('user.recover') }}" class="btn btn-default">{{ _('Forgot password') }}</a>
 </div><!-- /.container -->
 {% endblock %}

@@ -12,6 +12,8 @@ from flask_login import LoginManager, logout_user, \
 from flask_principal import (Principal, AnonymousIdentity, UserNeed,
                                  identity_changed, identity_loaded,
                                  session_identity_loader)
+from yarl import URL
+import requests
 
 import conf
 from web.views.common import admin_role, api_role, login_user_bundle
@@ -56,15 +58,51 @@ def before_request():
         UserController(current_user.id).update(
                     {'id': current_user.id}, {'last_seen': datetime.utcnow()})
 
-@current_app.route('/login', methods=['GET', 'POST'])
+@current_app.route('/login', methods=['GET'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    form = SigninForm()
-    if form.validate_on_submit():
-        login_user_bundle(form.user)
-        return form.redirect('home')
-    return render_template('login.html', form=form)
+    if request.args.get('code'):
+        code = request.args.get('code')
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': conf.OPENIDC_CLIENT_ID,
+            'client_secret': conf.OPENIDC_CLIENT_SECRET,
+            'redirect_uri': url_for('login', _external=True),
+            'code': code
+        }
+        r = requests.post(conf.OPENIDC_TOKEN_ENDPOINT, data=data)
+        tokens = r.json()
+        if 'error' not in tokens:
+            headers = {
+                'Authorization': 'Bearer ' + tokens['access_token'],
+            }
+            r = requests.post(conf.OPENIDC_USERINFO_ENDPOINT, headers=headers)
+            userinfo = r.json()
+
+            ucontr = UserController()
+            try:
+                user = ucontr.get(**{'external_id': userinfo['sub']})
+                ucontr.update({'id': user.id},
+                              {
+                               'nickname': userinfo['preferred_username'],
+                               'email': userinfo['email'],
+                               })
+            except NotFound:
+                user = ucontr.create(nickname=userinfo['preferred_username'],
+                                         email=userinfo['email'],
+                                         external_id=userinfo['sub'],
+                                         is_active=True,
+                                         is_api=True)
+            login_user_bundle(user)
+            return redirect(url_for('home'))
+
+    auth = URL(conf.OPENIDC_AUTHORIZATION_ENDPOINT)
+    auth = auth.with_query(client_id=conf.OPENIDC_CLIENT_ID,
+                           redirect_uri=url_for('login', _external=True),
+                           response_type='code',
+                           scope='openid profile email')
+    return render_template('login.html', authorization=auth)
 
 
 @current_app.route('/logout')
